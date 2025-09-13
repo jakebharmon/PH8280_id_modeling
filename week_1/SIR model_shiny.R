@@ -1,7 +1,7 @@
 library(shiny)
 library(deSolve)
 
-# SIR model with population size N
+ # SIR model with population size N
 sir_model <- function(time, state, params) {
   with(as.list(c(state, params)), {
     lambda <- beta * I / N

@@ -1,0 +1,18 @@
+#this function reads a data file as input matrix D
+
+
+
+function (file) 
+
+{
+
+    data <- read.table(file)
+
+    nrow <- nrow(data)
+
+    ncol <- ncol(data)
+
+    matrix(unlist(data), nrow, ncol)
+
+}
+

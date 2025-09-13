@@ -1,0 +1,17 @@
+psum <- function(mat){
+  
+  mat <- as.matrix(mat)
+  
+  Mat <- mat
+  
+  Mat[, 1] <- mat[, 1]
+  
+  for(j in 2:ncol(mat)) {
+    
+    Mat[, j] <- Mat[, j - 1] + mat[, j]
+    
+  }
+  
+  Mat
+  
+}

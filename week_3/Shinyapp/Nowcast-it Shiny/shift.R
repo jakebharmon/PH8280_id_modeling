@@ -1,0 +1,9 @@
+shift <- function(mat){
+  
+  for(i in 2:nrow(mat))
+    
+    mat[i,  ] <- shiftvec(mat[i,  ], i - 1)
+  
+  mat
+  
+}
