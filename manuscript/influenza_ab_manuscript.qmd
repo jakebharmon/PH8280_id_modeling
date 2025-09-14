@@ -10,7 +10,9 @@ execute:
 
 ## Test
 
-Test citation [@brauerModelsInfluenza2019] next [@centerfordiseasecontrolandpreventionLaboratoryConfirmedInfluenzaHospitalizations2025]
+Test citation [@brauerModelsInfluenza2019]
+
+next [@centerfordiseasecontrolandpreventionLaboratoryConfirmedInfluenzaHospitalizations2025]
 
 ```{r}
 library(tidyverse)
@@ -28,21 +30,22 @@ flu_df <- read_csv(
     "flu_b" = 4,
     "flu_ab" = 5,
     "flu_u" = 6
-  )
+  ) %>% 
+  drop_na()
+```
 
+```{r fig.width=10, fig.height=18}
 # For graphing
 flu_time_series <- flu_df %>% 
   pivot_longer(cols = -c(season, week_num), names_to = "flu") %>% 
-  filter(season == "2018-19")
-flu_time_series$week_num <- factor(flu_time_series$week_num,
-  levels = unique(flu_time_series$week_num)
-)
-flu_time_series$week_num <- as.numeric(flu_time_series$week_num)
+  mutate(week_num = substr(week_num, 6, nchar(week_num)),
+         week_num = week_num %>% as_factor() %>% as.numeric())
 
 # Create timeseries
 ggplot(data = flu_time_series, aes(x = week_num, y = value, color = flu)) +
   geom_point() +
   geom_line() +
+  facet_wrap(~ season, scale = "free_y", ncol = 3) +
   labs(
     title = "Weekly Influenza A/B Counts, 2018-2019 Season",
     x = "Flu Week",
