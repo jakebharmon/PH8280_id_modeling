@@ -1,0 +1,123 @@
+---
+title: "Counterfactual Estimates of the 2019-2020 Flu Season: A Bayesian Approach"
+author: "Jake Harmon"
+format: docx
+bibliography: references.bib
+execute: 
+  warning: false
+  echo: false
+---
+
+## Project Description
+
+This project aims to forecast the amount of influenza cases that would have occurred during the 2019-2020 flu season were it not for the COVID-19 Pandemic and accompanying public health measures such as lockdowns, social distancing, and mask mandates. Public health measures, including lockdowns, were enacted across American beginning around March 2020, where a percipitious dropoff can be seen in influenza hospitalizations, as opposed to the ordinary gradual slope off throughout the ensuing flu weeks. We will analyze multi-year influenza laboratory data to (1) forecast the expected number of positive influenza test results for the remainder the 2019-2020 flu season by calculating a Bayesian prior distribution from previous years' flu data using both phenomenological (general growth logistic) and mechanistic (SEIR) models, (2) calculate the number of deficit cases caused by public health interventions in the period, which will be ascertained by comparing expected to actual cases, and (3) quantify the effect of the lockdown measures on the reproduction number of influenza. 
+
+## Scope
+
+# 1 - Data sources
+
+* Weekly positive (public and clinical) laboratory test data from 2010-2020 gathered from NRVESS and ILInet
+
+# 2 - Modeling Approaches
+
+* This project will use the BayesianFitForecast toolbox to calculate a prior distribution and parameters of historic fluweeks to fit a model
+
+* Multiple estimations of parameters will be done assuming different error models, including Normal, Negative Binomial, and Poisson
+
+* The parameters will then be forecasted to estimate the expected number of influenza cases as well as to estimate composite expressions like R naught.
+
+# 3 - Analytical objectives
+
+1) Forecast a counterfactual scenario where the flu season ran uninterrupted
+
+2) Estimate the impact of public health measures during COVID on the reproduction number of influenza
+
+3) Calculate the number of deficit cases from expectations based on historical data
+
+## Introduction
+
+Influenza in humans comes in two types - A and B which are further divided into subtypes such as H1N1/H3N2 or Victoria/Yamagata respectively. Influenza A is the most common type to infect humans [@cdcPeopleIncreasedRisk2025]. Influenza as a whole is a costly, contagious virus which in the United States results in over 300,000 annual hospitalizations as well as tens of thousands of death each year; a 2018 study estimated the annual cost to the American healthcare system to be $11.2 billion annually [@putriEconomicBurdenSeasonal2018]. 
+
+Hospitalization generally arises from complications developed during the course of the illness. This is commonly due to preexisting respiratory conditions or others such immune, liver, or blood conditions; CDC reports that, in recent years, roughly nine out of ten hospitalized cases had at least one preexisting condition [@cdcPeopleIncreasedRisk2025]. A meta analysis analyzing studies from both High Income and Low-Middle Income Countries found that children and young people were at significantly less risk than the elderly for hospitalization or severe outcomes such as ICU admittance or death [@colemanRiskFactorsSerious2018]. Vaccines are effective at reducing the risk of complications across all age groups, although the efficacy varies based on the predominant viral subtypes as vaccines are formulated to only protect against the expected strands [@trombettaInfluenzaVirusesVaccines2022].
+
+Currently, a global effort is being led by the WHO to combat influenza by increasing surveillance and laboratory capacity, as well as by conducting effective vaccination campaigns [@cdcCDCsGlobalInfluenza2024]. This international collaboration relies on nations freely sharing laboratory tests of strands to identify the prevalence of influenza subtypes across the world, as this information is passed onto vaccine manufacturers to produce effective vaccines. This system is fragile, and it is easily disrupted - as seen earlier in 2025 when, admist an H5N1 outbreak in America, CDC ceased sharing data with the WHO [@maxmenUrgentCDCData2025]. All further efforts against influenza rely on the free flow of data to develop effective vaccines as well as develop appropriate policy.
+
+Influenza forecasting can inform public health's decision making capacity, even down to the local level by determining the warrant for school closures or optimizing placement of healthcare workers to deal with peaks of cases [@WhyCDCSupports2023]. A variety of forecasting efforts have been used in the past to inform early-response efforts, to various degrees of success. In 2013, Google Flu Trends attempted to predict influenza cases by harnessing the big data of symptom searches on Google, and yet its predictions invariably skewed higher than CDC data over 100/108 weeks [@lazerParableGoogleFlu2014]. During the same time period, CDC began the FluSight program, inviting academic partners to analyze ILINet data and compete to produce the most accurate forecast. This project has proved much more successful, although it was at times impacted by reporting delays [@reichCollaborativeMultiyearMultimodel2019].
+
+This study seeks to analyze the impact of the Non Pharmaceutical Interventions (NPIs) imposed during the start of COVID 19 pandemic upon the spread of influenza during the 2019-2020 flu season. A report from the CDC says that, though the immediate decline in positive lab specimens following the declaration of the COVID 19 Emergency was in part due to changed testing practices, "renewed efforts by public health officials and clinicians to test samples for influenza resulted in adequate numbers tested and detection of little to no influenza virus" [@olsenDecreasedInfluenzaActivity2020]. This drop off is not unprecedented, as historical data from the 1918 Spanish Influenza shows that similar NPI's also had a "profound influence" on the rate of infecttion [@bootsmaEffectPublicHealth2007]. This study aims, then, to pose the counterfactual of what amount of cases would be expected had the influenza season proceeded as normal, without the incidence of COVID 19? By using historical data to create a model, the rest of the season can be forecasted by existing data and the shortfall calculated. 
+
+```{r}
+library(tidyverse)
+library(readr)
+library(viridis) 
+
+# Downloaded from https://gis.cdc.gov/grasp/fluview/FluHospChars.html
+flu_clinical_df <- read_csv(
+  file = (paste0(getwd(),"/data/ICL_NREVSS_Clinical_Labs.csv")),
+  skip = 1) %>% 
+  rename(
+    "season" = 3,
+    "week_num" = 4
+  ) %>% 
+  drop_na() %>% 
+  
+  # Create diy columns with factored week numbers as well as summed flu count
+  mutate(week_num = week_num %>% as_factor() %>% as.numeric(),
+         flu_count = rowSums(.[6:7],),
+         source = "clinical") %>% 
+  select(season, week_num, flu_count, source) %>%
+  
+  # Select seasons 2010-11 through 2020-21
+  filter(season %in% 2015:2020)
+
+
+flu_public_df <- read_csv(
+  file = (paste0(getwd(),"/data/ICL_NREVSS_Public_Health_Labs.csv")),
+  skip = 1) %>% 
+  rename(
+    "season" = 3,
+    "week_num" = 4
+  ) %>% 
+  drop_na() %>% 
+  
+  # Create diy columns with factored week numbers as well as summed flu count
+  mutate(week_num = week_num %>% as_factor() %>% as.numeric(),
+         flu_count = rowSums(.[6:7]),
+         source = "public") %>% 
+  select(season, week_num, flu_count, source) %>%
+  
+  # Select seasons 2010-11 through 2020-21
+  filter(season %in% 2015:2020)
+```
+
+```{r fig.width=12, fig.height=10}
+# For graphing
+flu_time_series <- rbind(flu_clinical_df, flu_public_df) %>% 
+  summarize(flu_count = sum(flu_count), 
+            .by = c(season, week_num)) %>% 
+  mutate(source = "total") %>% 
+  rbind(flu_clinical_df, flu_public_df)
+
+# Create Time series plotting data
+ggplot(data = flu_time_series, aes(x = week_num, y = flu_count, color = source)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(
+    ~ season, 
+#    scale = "free_y", 
+    ncol = 3) +
+  labs(
+    title = "Positive Influenza Clinical/Public Lab Tests from 2015-2020",
+    x = "Flu Week",
+    y = "Number of Weekly Hospitalizations",
+  ) +
+  scale_color_viridis(
+    discrete = TRUE, 
+    option = "D",
+    labels = c(
+      "clinical" = "Clinical Lab",
+      "public" = "Public Health Lab",
+      "total" = "Total Lab Results")) 
+```
+
+## Citations
