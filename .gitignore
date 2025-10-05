@@ -3,6 +3,9 @@
 .RData
 .Ruserdata
 .Rdata
+/BayesianFitForecast
+/renv
 .httr-oauth
 .DS_Store
 .quarto
+

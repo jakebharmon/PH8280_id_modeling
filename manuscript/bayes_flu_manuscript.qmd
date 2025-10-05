@@ -8,35 +8,12 @@ execute:
   echo: false
 ---
 
-## Project Description
-
-This project aims to forecast the amount of influenza cases that would have occurred during the 2019-2020 flu season were it not for the COVID-19 Pandemic and accompanying public health measures such as lockdowns, social distancing, and mask mandates. Public health measures, including lockdowns, were enacted across American beginning around March 2020, where a percipitious dropoff can be seen in influenza hospitalizations, as opposed to the ordinary gradual slope off throughout the ensuing flu weeks. We will analyze multi-year influenza laboratory data to (1) forecast the expected number of positive influenza test results for the remainder the 2019-2020 flu season by calculating a Bayesian prior distribution from previous years' flu data using both phenomenological (general growth logistic) and mechanistic (SEIR) models, (2) calculate the number of deficit cases caused by public health interventions in the period, which will be ascertained by comparing expected to actual cases, and (3) quantify the effect of the lockdown measures on the reproduction number of influenza. 
-
-## Scope
-
-# 1 - Data sources
-
-* Weekly positive (public and clinical) laboratory test data from 2010-2020 gathered from NRVESS and ILInet
-
-# 2 - Modeling Approaches
-
-* This project will use the BayesianFitForecast toolbox to calculate a prior distribution and parameters of historic fluweeks to fit a model
-
-* Multiple estimations of parameters will be done assuming different error models, including Normal, Negative Binomial, and Poisson
-
-* The parameters will then be forecasted to estimate the expected number of influenza cases as well as to estimate composite expressions like R naught.
-
-# 3 - Analytical objectives
-
-1) Forecast a counterfactual scenario where the flu season ran uninterrupted
-
-2) Estimate the impact of public health measures during COVID on the reproduction number of influenza
-
-3) Calculate the number of deficit cases from expectations based on historical data
-
 ## Introduction
 
-Influenza in humans comes in two types - A and B which are further divided into subtypes such as H1N1/H3N2 or Victoria/Yamagata respectively. Influenza A is the most common type to infect humans [@cdcPeopleIncreasedRisk2025]. Influenza as a whole is a costly, contagious virus which in the United States results in over 300,000 annual hospitalizations as well as tens of thousands of death each year; a 2018 study estimated the annual cost to the American healthcare system to be $11.2 billion annually [@putriEconomicBurdenSeasonal2018]. 
+Influenza in humans can come in two types - A and B - which are further divided into subtypes such as H1N1/H3N2 or Victoria/Yamagata respectively [@cdcPeopleIncreasedRisk2025]. These subtypes come in various strains, which over the course of time compete with each other and die out as new strains emerge. This is theorized to occur because of novel antigen-responses producing cross-immunity against currently circulating viruses [@paleseWhyInfluenzaVirus2011]. This has been observed in recent years as, following the COVID-19 Pandemic, global influenza surveillance systems have not detected meaningful circulation of B-Yamagata, thus leading to increased prevalence of IAV. As a result, the WHO changed its recommendations from quadrivalent to trivalent flu vaccines in 2023 [@delriccioHowHasDisappearance2025]. 
+
+
+Influenza as a whole is a costly, contagious virus which in the United States results in over 300,000 annual hospitalizations as well as tens of thousands of death each year; a 2018 study estimated the annual cost to the American healthcare system to be $11.2 billion annually [@putriEconomicBurdenSeasonal2018]. 
 
 Hospitalization generally arises from complications developed during the course of the illness. This is commonly due to preexisting respiratory conditions or others such immune, liver, or blood conditions; CDC reports that, in recent years, roughly nine out of ten hospitalized cases had at least one preexisting condition [@cdcPeopleIncreasedRisk2025]. A meta analysis analyzing studies from both High Income and Low-Middle Income Countries found that children and young people were at significantly less risk than the elderly for hospitalization or severe outcomes such as ICU admittance or death [@colemanRiskFactorsSerious2018]. Vaccines are effective at reducing the risk of complications across all age groups, although the efficacy varies based on the predominant viral subtypes as vaccines are formulated to only protect against the expected strands [@trombettaInfluenzaVirusesVaccines2022].
 
@@ -44,7 +21,10 @@ Currently, a global effort is being led by the WHO to combat influenza by increa
 
 Influenza forecasting can inform public health's decision making capacity, even down to the local level by determining the warrant for school closures or optimizing placement of healthcare workers to deal with peaks of cases [@WhyCDCSupports2023]. A variety of forecasting efforts have been used in the past to inform early-response efforts, to various degrees of success. In 2013, Google Flu Trends attempted to predict influenza cases by harnessing the big data of symptom searches on Google, and yet its predictions invariably skewed higher than CDC data over 100/108 weeks [@lazerParableGoogleFlu2014]. During the same time period, CDC began the FluSight program, inviting academic partners to analyze ILINet data and compete to produce the most accurate forecast. This project has proved much more successful, although it was at times impacted by reporting delays [@reichCollaborativeMultiyearMultimodel2019].
 
-This study seeks to analyze the impact of the Non Pharmaceutical Interventions (NPIs) imposed during the start of COVID 19 pandemic upon the spread of influenza during the 2019-2020 flu season. A report from the CDC says that, though the immediate decline in positive lab specimens following the declaration of the COVID 19 Emergency was in part due to changed testing practices, "renewed efforts by public health officials and clinicians to test samples for influenza resulted in adequate numbers tested and detection of little to no influenza virus" [@olsenDecreasedInfluenzaActivity2020]. This drop off is not unprecedented, as historical data from the 1918 Spanish Influenza shows that similar NPI's also had a "profound influence" on the rate of infecttion [@bootsmaEffectPublicHealth2007]. This study aims, then, to pose the counterfactual of what amount of cases would be expected had the influenza season proceeded as normal, without the incidence of COVID 19? By using historical data to create a model, the rest of the season can be forecasted by existing data and the shortfall calculated. 
+This paper looks to analyze the difference between IAV and IBV trends, as they have noted different temporalities in the united states, where A is noted to peak in December while B peaks around February. This can be seen especially in pediatric cases, where IBV resulted in ~ 40 % of deaths in the 2023-2024 flu season, all concentrated after January [@cdcInfluenzaActivityUnited2024]. This comes at the a time as well when IBV has been varying in its temporality: [@borcheringAnomalousInfluenzaSeasonality2021]. G
+
+Goal: analyze SIRC model - crossimunity, theorize how can contribtue to futurue changes. [@liDYNAMICSSIRCEPIDEMIOLOGICAL]
+
 
 ```{r}
 library(tidyverse)

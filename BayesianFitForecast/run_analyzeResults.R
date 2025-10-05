@@ -11,7 +11,7 @@ library(ggplot2)
 library(stringr)
 library(gridExtra)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-source("options_SEIR_sanfrancisco_Ex5.R")
+source("options_SEIR_covid_Normal.R")
 source("Metric functions.R")
 Mydata <- read_excel(paste0(cadfilename1, ".xlsx"))
 

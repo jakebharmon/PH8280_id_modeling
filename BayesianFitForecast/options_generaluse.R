@@ -87,7 +87,7 @@ ode_system <- '
 # - paramsfix[4]: For rho (recovery proportion rate). 0 means it will be estimated.
 # - paramsfix[5]: For N (total population size). 1 means it is fixed.
 # - paramsfix[6]: For i0 (initial number of infected individuals). 0 means it will be estimated.
-paramsfix <- c(0, 0, 0, 0, 1, 0)
+paramsfix <- c(0, 0, 0, 0, 0, 0)
 
 
 # Define a list of expressions of interest that will be generated based on model parameters.
@@ -192,7 +192,7 @@ params1_prior <- "normal(0, 1)T[0,]"
 params2_prior <- "normal(0, 1)T[0,]"
 params3_prior <- "normal(0, 1)T[0,]"
 params4_prior <- "normal(0, 1)T[0,]"
-params5_prior <- 1000000
+params5_prior <- "normal(0, 1)T[0,]"
 params6_prior <- "normal(0, 10)T[0,]"
 
 

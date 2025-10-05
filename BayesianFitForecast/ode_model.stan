@@ -7,11 +7,11 @@ functions {
 
  
     real beta = theta[1];
-    real i0 = theta[2];
-    real rho = x_i[1];
-    real N = x_i[2];
-    real gamma = x_r[1];
-    real kappa = x_r[2];
+    real gamma = theta[2];
+    real kappa = theta[3];
+    real rho = theta[4];
+    real i0 = theta[5];
+    real N = x_i[1];
     array[5] real init = {N-i0, 0, i0, 0, i0};
 
     real S = y[1]+init[1];
@@ -35,46 +35,51 @@ data {
     int<lower=0> nfst_days;real t0;
 array[n_days + nfst_days] real ts;
 array[n_days] int cases1;
-    int rho;
     int N;
-    real gamma;
-    real kappa;
 }
   
 transformed data {
-    array[2] real x_r = {gamma,kappa};
-    array[2] int x_i = {rho,N};
+    array[0] real x_r;
+    array[1] int x_i = {N};
 
   }parameters {
     real<lower=0> beta;
-    real<lower=0, upper=100> i0;
-    real<lower=0> sigma1;
+    real<lower=0> gamma;
+    real<lower=0> kappa;
+    real<lower=0, upper=1> rho;
+    real<lower=0> i0;
 }
 transformed parameters {
   array[n_days + nfst_days, 5] real y;
-  array[2] real theta;
-  theta[1] = beta;
-  theta[2] = i0;
-
-  y = integrate_ode_rk45(ode, rep_array(0.0, 5), t0, ts, theta, x_r, x_i);
+  {
+    array[5] real theta;
+    theta[1] = beta;
+    theta[2] = gamma;
+    theta[3] = kappa;
+    theta[4] = rho;
+    theta[5] = i0;
+    y = integrate_ode_rk45(ode, rep_array(0.0, 5), t0, ts, theta, x_r, x_i);
+  }
 }
 model {
-  beta ~ uniform(0, 10);
-  i0 ~ normal(0, 10);
-
-  sigma1 ~ cauchy(0, 2.5)T[0,];
+  beta ~ normal(0, 1)T[0,];
+  gamma ~ normal(0, 1)T[0,];
+  kappa ~ normal(0, 1)T[0,];
+  rho ~ normal(0, 1)T[0,];
+  i0 ~ normal(0, 10)T[0,];
 
   for (t in 1:n_days) {
-    cases1[t] ~ normal(fmax(1e-6, rho * kappa * y[t,2]), sigma1);
+    cases1[t] ~ poisson(fmax(1e-6, y[t,5]));
   }
 }
 
 generated quantities {
-array[n_days + nfst_days] real pred_cases1;
+  array[n_days + nfst_days] real pred_cases1;
   for (t in 1:(n_days + nfst_days)) {
-    pred_cases1[t] = normal_rng(fmax(1e-6, rho * kappa * y[t,2]), sigma1);
+    pred_cases1[t] = poisson_rng(fmax(1e-6, y[t,5]));
   }
 
   real R0 = beta / gamma;
+  real recovery_time = 1 / gamma;
 }
 
