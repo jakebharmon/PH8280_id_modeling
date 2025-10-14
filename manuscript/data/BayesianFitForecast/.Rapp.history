@@ -1,0 +1,3 @@
+load("/Users/jake/Documents/PH8280_id_modeling/manuscript/BayesianFitForecast/Bayesian-uniform-cal-17-fcst-10-normal-sanfrancisco-fit.Rdata")
+load("/Users/jake/Documents/PH8280_id_modeling/manuscript/BayesianFitForecast/Bayesian-uniform-cal-17-fcst-10-normal-sanfrancisco-fit.Rdata")
+view(load("/Users/jake/Documents/PH8280_id_modeling/manuscript/BayesianFitForecast/Bayesian-uniform-cal-17-fcst-10-normal-sanfrancisco-fit.Rdata"))

@@ -9,4 +9,3 @@
 .DS_Store
 .quarto
 renv.lock
-/manuscript/data/BayesianFitForecast
