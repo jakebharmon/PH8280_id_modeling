@@ -34,15 +34,25 @@ Goal: analyze SIRC model - crossimunity [@liDYNAMICSSIRCEPIDEMIOLOGICAL] [@lauri
 
 $$
 \begin{aligned}
-\frac{dS}{dt} &= \beta_1 - \frac{\beta_2 S I_1}{N} - \frac{\beta_3 S I_2}{N} - \mu S, \\
-\frac{dI_1}{dt} &= \frac{\beta_2 S I_1}{N} - (\mu + \gamma_1 + \delta_1) I_1, \\
-\frac{dI_2}{dt} &= \frac{\beta_3 S I_2}{N} - (\mu + \gamma_2 + \delta_2) I_2, \\
-\frac{dR_1}{dt} &= \gamma_1 I_1 - (\mu + \omega_1) R_1, \\
-\frac{dR_2}{dt} &= \gamma_2 I_2 - (\mu + \omega_2) R_2, \\
-\frac{dV_1}{dt} &= \delta_1 I_1 + \omega_1 R_1 - \frac{\beta_3 \phi_1 V_1 I_2}{N} - \mu V_1, \\
-\frac{dV_2}{dt} &= \delta_2 I_2 + \omega_2 R_2 - \frac{\beta_2 \phi_2 V_2 I_1}{N} - \mu V_2.
+\frac{dS}{dt} &= \Lambda - \frac{\beta_1 S I_1}{N} - \frac{\beta_2 S I_2}{N} - \mu S, \\
+\frac{dI_1}{dt} &= \frac{\beta_1 S I_1}{N} - (\gamma_1 + \delta_1 + \mu) I_1, \\
+\frac{dI_2}{dt} &= \frac{\beta_2 S I_2}{N} - (\gamma_2 + \delta_2 + \mu) I_2, \\
+\frac{dR_1}{dt} &= \gamma_1 I_1 - (\omega_1 + \mu) R_1, \\
+\frac{dR_2}{dt} &= \gamma_2 I_2 - (\omega_2 + \mu) R_2, \\
+\frac{dV}{dt} &= \delta_1 I_1 + \delta_2 I_2 + \omega_1 R_1 + \omega_2 R_2 
+                 - \frac{\beta_2 \phi_1 V I_2}{N} - \frac{\beta_1 \phi_2 V I_1}{N} - \mu V
 \end{aligned}
-$$\
+$$
+
+**Composite expressions:**
+
+$$
+\begin{aligned}
+R_{0,1} &= \frac{\beta_1}{\gamma_1 + \delta_1 + \mu}, \\
+R_{0,2} &= \frac{\beta_2}{\gamma_2 + \delta_2 + \mu}, \\
+\text{VaccinationRate} &= \delta_1 + \delta_2
+\end{aligned}
+$$
 
 ## Data visualization ![](data/flu_time_series.png)
 
