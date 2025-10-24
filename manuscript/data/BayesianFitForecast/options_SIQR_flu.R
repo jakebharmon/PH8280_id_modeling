@@ -7,9 +7,9 @@ forecastinghorizon <- 10
 model_name <- "SIRV_two_strain"
 cadfilename1 <- "influenza_df"
 caddisease <- "Influenza"
-datatype <- c("Infectious","newly infected people")
-series_cases <- c("Infectious","newly infected people")
-datetype <- "Days"
+datatype <- c("Influenza A","Influenza B")
+series_cases <- c("Influenza A","Influenza B")
+datetype <- "Weeks"
 
 # ----------------------------
 # State variables
@@ -26,12 +26,17 @@ vars <- c("S","I1","I2","R1","R2","V")
 # "gamma1",  # params5   recovery rate from I1 -> R1
 # "gamma2",  # params6   recovery rate from I2 -> R2
 # "nu"       # params7   vaccination rate (S -> V)
+# "N"        # params8   population
+# "i0"       # params9   initial infected (absolute, or fraction depending on your conventions)
+# "rho"      # params10  reporting fraction
+params <- c("Lambda","beta1","beta2",
+            "mu","gamma1","gamma2",
+            "nu","N","i0","rho")
 
-params <- c("Lambda","beta1","beta2","mu","gamma1","gamma2",
-            "nu","N","i0")
-
-paramsfix <- c(0,0,0,0,0,0,
-               0,1,1)
+# If you use a boolean vector for fixing parameters, ensure indices match above.
+paramsfix <- c(1,1,1,
+               1,0,0,
+               0,1,1,0)
 
 # ----------------------------
 # Priors and initial conditions 
@@ -39,54 +44,65 @@ paramsfix <- c(0,0,0,0,0,0,
 # ----------------------------------------------------------
 
 # 1: Lambda (input rate)
-# Fix to 0 for constant population
+# Fix to 0 for constant population / short epidemic window
 params1_prior  <- 0 
-params1_LB <- 0
-params1_UB <- NA
 
 # 2–3: beta1, beta2 (transmission rates)
-# Based on R0 ~1.5, gamma ~0.25
-params2_prior  <- "lognormal(log(0.4), 0.4)"
-params2_LB <- 0
-params2_UB <- NA
-params3_prior  <- "lognormal(log(0.38), 0.4)"
-params3_LB <- 0
-params3_UB <- NA
+# lognormal priors centered on plausible beta = R0 * gamma (~0.3-0.5)
+params2_prior  <- 0.4
+params3_prior  <- 0.4
 
 # 4: mu (natural death rate)
-# Human life expectancy ~70 years → 3.9e-5 per day
-params4_prior  <- "normal(3.9e-5, 1e-6)T[0,1]"
-params4_LB <- 0
-params4_UB <- 1
+# Human life expectancy ~70 years -> ~3.9e-5 per day
+params4_prior  <- 3.9e-5
 
 # 5–6: gamma1, gamma2 (recovery rates)
-# Infectious period 3–5 days = 0.2–0.33/day
-params5_prior  <- "normal(0.25, 0.05)T[0,]"
+# Infectious period 3–5 days -> gamma ~ 0.2-0.33/day
+params5_prior  <- "normal(0.25, 0.05)T[0,]"   # gamma1
 params5_LB <- 0
-params5_UB <- NA
-params6_prior  <- "normal(0.25, 0.05)T[0,]"
+params5_UB <- 0.1
+params6_prior  <- "normal(0.25, 0.05)T[0,]"   # gamma2
 params6_LB <- 0
-params6_UB <- NA
+params6_UB <- 0.1
 
 # 7: nu (vaccination rate)
-# Annual vaccination coverage 40–60% = ~0.0015 per day
-params7_prior <- "normal(0.0015, 0.0005)T[0,]"
+# annual coverage c ≈ 0.4-0.6 => nu ≈ -ln(1-c)/365 ~ 0.0014-0.0025
+params7_prior <- "normal(0.0019, 0.0006)T[0,]" 
 params7_LB <- 0
 params7_UB <- 0.01
 
-# 8-9: initial conditions - N, i0
-params8_prior <- 1e6                   # N
-params9_prior <- 10                    # i0
+# 8: N (population)
+params8_prior <- 1e6
 
+# 9: i0 (initial infected)
+params9_prior <- 10
+
+# 10: rho (reporting fraction)
+params10_prior <- "beta(2, 4)"   # mean ~ 0.333; adjust to reflect your prior knowledge of underreporting
+params10_LB <- 0
+params10_UB <- 1
+
+# ----------------------------
+# Observation / error model priors
+# ----------------------------
+errstrc <- 1
+normalerror1_prior <- "cauchy(0, 2.5)" 
+negbinerror1_prior <- "exponential(5)"
+negbinerror2_prior <- "exponential(5)"
+
+# ----------------------------
+# Time dependent templates
+# ----------------------------
 time_dependent_templates <- list()
 
 # ----------------------------
 # Differential equations (ODE system)
+# S (vars1), I1 (vars2), I2 (vars3), R1 (vars4), R2 (vars5), V (vars6)
 # ----------------------------
 ode_system <- '
-  diff_var1 = params1 - (params2 * vars1 * vars2 / N) - (params3 * vars1 * vars3 / N) - params7 * vars1 - params4 * vars1
-  diff_var2 = params2 * vars1 * vars2 / N - (params4 + params5) * vars2
-  diff_var3 = params3 * vars1 * vars3 / N - (params4 + params6) * vars3
+  diff_var1 = params1 - (params2 * vars1 * vars2 / params8) - (params3 * vars1 * vars3 / params8) - params7 * vars1 - params4 * vars1
+  diff_var2 = params2 * vars1 * vars2 / params8 - (params4 + params5) * vars2
+  diff_var3 = params3 * vars1 * vars3 / params8 - (params4 + params6) * vars3
   diff_var4 = params5 * vars2 - params4 * vars4
   diff_var5 = params6 * vars3 - params4 * vars5
   diff_var6 = params7 * vars1 - params4 * vars6
@@ -97,28 +113,21 @@ ode_system <- '
 # ----------------------------
 composite_expressions <- list(
   R0_1 = "beta1 / gamma1",
-  R0_2 = "beta2 / gamma2",
-  VaccinationRate = "nu"
+  R0_2 = "beta2 / gamma2"
 )
 
 # ----------------------------
 # Data / file / disease metadata
 # ----------------------------
-
 fitting_index <- c(2,3)
-fitting_diff <- c(1,0)
-errstrc <- 1
-normalerror1_prior <- "cauchy(0, 2.5)" 
-negbinerror1_prior <- "exponential(5)"
-negbinerror2_prior <- "exponential(5)"
+fitting_diff <- c(1,1)
 
 # ----------------------------
-# Initial conditions
+# Initial conditions 
+# S (vars1), I1 (vars2), I2 (vars3), R1 (vars4), R2 (vars5), V (vars6)
 # ----------------------------
-vars.init <- 0
-
-N <- 1e6
-Ic = c(10, 0, 0, 0, 0, 0)
+Ic <- c(1e6, 10, 0, 0, 0, 0)
+vars.init <- 1
 
 # ----------------------------
 # MCMC / sampling settings
