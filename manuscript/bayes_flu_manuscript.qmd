@@ -32,15 +32,60 @@ This paper looks to analyze the difference between Influenza A (IAV) and Influen
 
 Goal: analyze SIRC model - crossimunity [@liDYNAMICSSIRCEPIDEMIOLOGICAL] [@laurieEvidenceViralInterference2018] B dynamics
 
+---
+title: "Two-Strain SIRV Model Specification"
+format: html
+---
+
+## Model Equations
+
+The system of Ordinary Differential Equations (ODEs) used for the identifiability analysis is defined as:
+
 $$
 \begin{aligned}
-\frac{dS}{dt} &= \Lambda - \frac{\beta_1 S I_1}{N} - \frac{\beta_2 S I_2}{N} - \mu S, \\
-\frac{dI_1}{dt} &= \frac{\beta_1 S I_1}{N} - (\gamma_1 + \delta_1 + \mu) I_1, \\
-\frac{dI_2}{dt} &= \frac{\beta_2 S I_2}{N} - (\gamma_2 + \delta_2 + \mu) I_2, \\
-\frac{dR_1}{dt} &= \gamma_1 I_1 - (\omega_1 + \mu) R_1, \\
-\frac{dR_2}{dt} &= \gamma_2 I_2 - (\omega_2 + \mu) R_2, \\
-\frac{dV}{dt} &= \delta_1 I_1 + \delta_2 I_2 + \omega_1 R_1 + \omega_2 R_2 
-                 - \frac{\beta_2 \phi_1 V I_2}{N} - \frac{\beta_1 \phi_2 V I_1}{N} - \mu V
+\frac{dS}{dt} &= \Lambda - \frac{\beta_1 S I_1}{N_0} - \frac{\beta_2 S I_2}{N_0} - \alpha S - \mu S \\
+\frac{dI_1}{dt} &= \frac{\beta_1 S I_1}{N_0} - (\mu + \gamma_1) I_1 \\
+\frac{dI_2}{dt} &= \frac{\beta_2 S I_2}{N_0} - (\mu + \gamma_2) I_2 \\
+\frac{dR_1}{dt} &= \gamma_1 I_1 - \mu R_1 \\
+\frac{dR_2}{dt} &= \gamma_2 I_2 - \mu R_2 \\
+\frac{dV}{dt} &= \alpha S - \mu V
+\end{aligned}
+$$
+
+## Model Parameters
+
+```{r}
+# Define the Parameter Mapping Data Frame
+param_map_df <- tribble(
+  ~ODE_Parameter, ~Description, ~Prior_Distribution, ~Citation,
+  "$\\Lambda$", "Birth/Inflow Rate", "Fixed at 0", "Fixed (Keeling & Rohani, 2008)",
+  "$\\beta_1, \\beta_2$", "Transmission Rates", "lognormal(log(0.4), 0.5)", "Biggerstaff et al. (2014)",
+  "$\\mu$", "Natural Death Rate", "Fixed at $3.9\\mathrm{e}^{-5}$", "Standard Demographics (e.g., CDC)",
+  "$\\gamma_1, \\gamma_2$", "Recovery Rates", "normal(0.25, 0.05)T[0,]", "Carrat et al. (2008)",
+  "$\\nu$", "Vaccination Rate", "normal(0.0019, 0.0006)T[0,]", "CDC (2024)",
+  "$N_0$", "Initial Population", "Fixed at $1\\mathrm{e}^{6}$", "Fixed Constant",
+  "$I_0$", "Initial Infected", "lognormal(log(10), 1.0)", "Initial Condition (Fitted)",
+  "$\\rho$", "Reporting Fraction", "beta(2, 4)", "McCarthy et al. (2020)"
+)
+
+# Optional: Render the table for display
+knitr::kable(
+  param_map_df,
+  caption = "Model Parameter Mapping, Priors, and Sources",
+  col.names = c("ODE Parameter", "Description", "Prior Distribution", "Citation / Source"),
+  escape = FALSE 
+)
+```
+
+### Observed Outputs
+
+The system is observed through three outputs, which incorporate the **reporting fraction** $\rho$ (`params10`):
+
+$$
+\begin{aligned}
+y_1(t) &= \rho \cdot I_1(t) \quad \text{(Reported Cases, Strain 1)} \\
+y_2(t) &= \rho \cdot I_2(t) \quad \text{(Reported Cases, Strain 2)} \\
+y_3(t) &= V(t) \quad \hspace{1.1em} \text{(Observed Vaccinated Population)}
 \end{aligned}
 $$
 
@@ -55,6 +100,7 @@ R_{0,2} &= \frac{\beta_2}{\gamma_2 + \delta_2 + \mu}, \\
 $$
 
 ## Julia Structural Identifiability
+
 ```{r}
 #| label: identifiability-table
 #| echo: false
@@ -85,7 +131,6 @@ knitr::kable(
   col.names = c("Component (State/Parameter)", "Identifiability Status")
 )
 ```
-
 
 ## Data visualization ![](data/flu_time_series.png)
 
