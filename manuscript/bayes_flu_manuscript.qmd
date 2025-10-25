@@ -54,6 +54,39 @@ R_{0,2} &= \frac{\beta_2}{\gamma_2 + \delta_2 + \mu}, \\
 \end{aligned}
 $$
 
+## Julia Structural Identifiability
+```{r}
+#| label: identifiability-table
+#| echo: false
+#| message: false
+
+# Load necessary R libraries
+library(jsonlite)
+library(dplyr)
+library(knitr)
+
+results_filename <- "/Users/jake/Documents/PH8280_id_modeling/manuscript/data/sirv_identifiability_final.json"
+
+# Load the JSON data
+results_list <- fromJSON(results_filename)
+
+# Convert the list into a data frame
+results_df <- data.frame(
+  Component = names(results_list),
+  Status = unlist(results_list)
+) |>
+  # Clean up the output status
+  mutate(Status = stringr::str_to_title(Status))
+
+# Display the table using kable
+knitr::kable(
+  results_df,
+  caption = "Final Global Identifiability Assessment for SIRV Model",
+  col.names = c("Component (State/Parameter)", "Identifiability Status")
+)
+```
+
+
 ## Data visualization ![](data/flu_time_series.png)
 
 ## Parameters: 2024 Flu Season
