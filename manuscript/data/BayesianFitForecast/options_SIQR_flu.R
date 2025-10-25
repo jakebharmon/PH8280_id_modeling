@@ -101,11 +101,14 @@ time_dependent_templates <- list()
 # ----------------------------
 ode_system <- '
   diff_var1 = params1 - (params2 * vars1 * vars2 / params8) - (params3 * vars1 * vars3 / params8) - params7 * vars1 - params4 * vars1
-  diff_var2 = params2 * vars1 * vars2 / params8 - (params4 + params5) * vars2
-  diff_var3 = params3 * vars1 * vars3 / params8 - (params4 + params6) * vars3
+  diff_var2 = (params2 * vars1 * vars2 / params8) - (params4 + params5) * vars2
+  diff_var3 = (params3 * vars1 * vars3 / params8) - (params4 + params6) * vars3
   diff_var4 = params5 * vars2 - params4 * vars4
   diff_var5 = params6 * vars3 - params4 * vars5
   diff_var6 = params7 * vars1 - params4 * vars6
+  y1 = params10 * vars2 
+  y2 = params10 * vars3
+  y3 = vars6
 '
 
 # ----------------------------
