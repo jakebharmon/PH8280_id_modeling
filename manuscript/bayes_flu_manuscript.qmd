@@ -52,54 +52,7 @@ $$
 \end{aligned}
 $$
 
-## Model Parameters
-
-```{r}
-# Define the Parameter Mapping Data Frame
-param_map_df <- tribble(
-  ~ODE_Parameter, ~Description, ~Prior_Distribution, ~Citation,
-  "$\\Lambda$", "Birth/Inflow Rate", "Fixed at 0", "Fixed (Keeling & Rohani, 2008)",
-  "$\\beta_1, \\beta_2$", "Transmission Rates", "lognormal(log(0.4), 0.5)", "Biggerstaff et al. (2014)",
-  "$\\mu$", "Natural Death Rate", "Fixed at $3.9\\mathrm{e}^{-5}$", "Standard Demographics (e.g., CDC)",
-  "$\\gamma_1, \\gamma_2$", "Recovery Rates", "normal(0.25, 0.05)T[0,]", "Carrat et al. (2008)",
-  "$\\nu$", "Vaccination Rate", "normal(0.0019, 0.0006)T[0,]", "CDC (2024)",
-  "$N_0$", "Initial Population", "Fixed at $1\\mathrm{e}^{6}$", "Fixed Constant",
-  "$I_0$", "Initial Infected", "lognormal(log(10), 1.0)", "Initial Condition (Fitted)",
-  "$\\rho$", "Reporting Fraction", "beta(2, 4)", "McCarthy et al. (2020)"
-)
-
-# Optional: Render the table for display
-knitr::kable(
-  param_map_df,
-  caption = "Model Parameter Mapping, Priors, and Sources",
-  col.names = c("ODE Parameter", "Description", "Prior Distribution", "Citation / Source"),
-  escape = FALSE 
-)
-```
-
-### Observed Outputs
-
-The system is observed through three outputs, which incorporate the **reporting fraction** $\rho$ (`params10`):
-
-$$
-\begin{aligned}
-y_1(t) &= \rho \cdot I_1(t) \quad \text{(Reported Cases, Strain 1)} \\
-y_2(t) &= \rho \cdot I_2(t) \quad \text{(Reported Cases, Strain 2)} \\
-y_3(t) &= V(t) \quad \hspace{1.1em} \text{(Observed Vaccinated Population)}
-\end{aligned}
-$$
-
-**Composite expressions:**
-
-$$
-\begin{aligned}
-R_{0,1} &= \frac{\beta_1}{\gamma_1 + \delta_1 + \mu}, \\
-R_{0,2} &= \frac{\beta_2}{\gamma_2 + \delta_2 + \mu}, \\
-\text{VaccinationRate} &= \delta_1 + \delta_2
-\end{aligned}
-$$
-
-## Julia Structural Identifiability
+**Julia Structural Identifiability**
 
 ```{r}
 #| label: identifiability-table
@@ -132,12 +85,45 @@ knitr::kable(
 )
 ```
 
-## Data visualization ![](data/flu_time_series.png)
+## Model Parameters
+
+```{r}
+# Define the Parameter Mapping Data Frame
+param_map_df <- tribble(
+  ~ODE_Parameter, ~Description, ~Prior_Distribution, ~Citation,
+  "$\\Lambda$", "Birth/Inflow Rate", "Fixed at 0", "Fixed (Keeling & Rohani, 2008)",
+  "$\\beta_1, \\beta_2$", "Transmission Rates", "lognormal(log(0.4), 0.5)", "Biggerstaff et al. (2014)",
+  "$\\mu$", "Natural Death Rate", "Fixed at $3.9\\mathrm{e}^{-5}$", "Standard Demographics (e.g., CDC)",
+  "$\\gamma_1, \\gamma_2$", "Recovery Rates", "normal(0.25, 0.05)T[0,]", "Carrat et al. (2008)",
+  "$\\nu$", "Vaccination Rate", "normal(0.0019, 0.0006)T[0,]", "CDC (2024)",
+  "$N_0$", "Initial Population", "Fixed at $1\\mathrm{e}^{6}$", "Fixed Constant",
+  "$I_0$", "Initial Infected", "lognormal(log(10), 1.0)", "Initial Condition (Fitted)",
+  "$\\rho$", "Reporting Fraction", "beta(2, 4)", "McCarthy et al. (2020)"
+)
+
+# Optional: Render the table for display
+knitr::kable(
+  param_map_df,
+  caption = "Model Parameter Mapping, Priors, and Sources",
+  col.names = c("ODE Parameter", "Description", "Prior Distribution", "Citation / Source"),
+  escape = FALSE 
+)
+```
+
+**Composite expressions:**
+
+$$
+\begin{aligned}
+R_{0,1} &= \frac{\beta_1}{\gamma_1 + \delta_1 + \mu}, \\
+R_{0,2} &= \frac{\beta_2}{\gamma_2 + \delta_2 + \mu}, \\
+\text{VaccinationRate} &= \delta_1 + \delta_2
+\end{aligned}
+$$
 
 ## Parameters: 2024 Flu Season
 
 ```{r}
-output_name <- "SIQR-Influenza-negativebinomial-cal-17-fcst-10"
+output_name <- "SIRV_two_strain-Influenza-negativebinomial-cal-17-fcst-10"
 
 parameters <- readxl::read_excel(paste0("/Users/jake/Documents/PH8280_id_modeling/manuscript/data/BayesianFitForecast/output/", output_name, "/parameters-", output_name, ".xlsx"))
 

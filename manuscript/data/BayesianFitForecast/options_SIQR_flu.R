@@ -27,14 +27,14 @@ vars <- c("S","I1","I2","R1","R2","V")
 # "gamma2",  # params6   recovery rate from I2 -> R2
 # "nu"       # params7   vaccination rate (S -> V)
 # "N"        # params8   population
-# "i0"       # params9   initial infected (absolute, or fraction depending on your conventions)
+# "i0"       # params9   initial infected
 # "rho"      # params10  reporting fraction
 params <- c("Lambda","beta1","beta2",
             "mu","gamma1","gamma2",
             "nu","N","i0","rho")
 
 # If you use a boolean vector for fixing parameters, ensure indices match above.
-paramsfix <- c(1,1,1,
+paramsfix <- c(1,0,0,
                1,0,0,
                0,1,1,0)
 
@@ -49,21 +49,25 @@ params1_prior  <- 0
 
 # 2–3: beta1, beta2 (transmission rates)
 # lognormal priors centered on plausible beta = R0 * gamma (~0.3-0.5)
-params2_prior  <- 0.4
-params3_prior  <- 0.4
+params2_prior  <- "normal(0.4, 0.5)T[0,]"
+params2_LB <- 0
+params2_UB <- 2.0
+params3_prior  <- "normal(0.4, 0.5)T[0,]"
+params3_LB <- 0
+params3_UB <- 2.0
 
 # 4: mu (natural death rate)
 # Human life expectancy ~70 years -> ~3.9e-5 per day
 params4_prior  <- 3.9e-5
 
 # 5–6: gamma1, gamma2 (recovery rates)
-# Infectious period 3–5 days -> gamma ~ 0.2-0.33/day
-params5_prior  <- "normal(0.25, 0.05)T[0,]"   # gamma1
+# Infectious period 3–5 days
+params5_prior  <- "normal(0.25, 0.05)T[0,]"
 params5_LB <- 0
-params5_UB <- 0.1
-params6_prior  <- "normal(0.25, 0.05)T[0,]"   # gamma2
+params5_UB <- 1.0
+params6_prior  <- "normal(0.25, 0.05)T[0,]"
 params6_LB <- 0
-params6_UB <- 0.1
+params6_UB <- 1.0
 
 # 7: nu (vaccination rate)
 # annual coverage c ≈ 0.4-0.6 => nu ≈ -ln(1-c)/365 ~ 0.0014-0.0025
@@ -78,7 +82,8 @@ params8_prior <- 1e6
 params9_prior <- 10
 
 # 10: rho (reporting fraction)
-params10_prior <- "beta(2, 4)"   # mean ~ 0.333; adjust to reflect your prior knowledge of underreporting
+# mean ~ 0.333;underreporting
+params10_prior <- "beta(2, 4)"
 params10_LB <- 0
 params10_UB <- 1
 
