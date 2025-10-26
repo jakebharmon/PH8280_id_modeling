@@ -1,11 +1,17 @@
-sirv_two_strain_final = @ODEmodel(
-           S(t) = Λ - (beta_eff_1 * S(t) * I₁(t)) - (beta_eff_2 * S(t) * I₂(t)) - α * S(t) - μ * S(t),
-           I₁(t) = (beta_eff_1 * S(t) * I₁(t)) - (μ + γ₁) * I₁(t),
-           I₂(t) = (beta_eff_2 * S(t) * I₂(t)) - (μ + γ₂) * I₂(t),
-           R₁(t) = γ₁ * I₁(t) - μ * R₁(t),
-           R₂(t) = γ₂ * I₂(t) - μ * R₂(t),
-           V(t)  = α * S(t) - μ * V(t),
+using StructuralIdentifiability
+
+sirv_two_strain_cross_immunity = @ODEmodel(
+           S'(t) = Λ - ((beta_1 * S(t) * I₁(t)) / N₀) - ((beta_2 * S(t) * I₂(t)) / N₀) - α * S(t) - μ * S(t),
+           I₁'(t) = (beta_1 * (S(t) + sigma_21 * R₂(t)) * I₁(t)) / N₀ - (μ + γ₁) * I₁(t),
+           I₂'(t) = (beta_2 * (S(t) + sigma_12 * R₁(t)) * I₂(t)) / N₀ - (μ + γ₂) * I₂(t),
+           R₁'(t) = γ₁ * I₁(t) - μ * R₁(t),
+           R₂'(t) = γ₂ * I₂(t) - μ * R₂(t),
+           V'(t)  = α * S(t) - μ * V(t),
            y1(t) = p * I₁(t), 
            y2(t) = p * I₂(t),
            y3(t) = V(t)
        )
+
+assess_identifiability(sirv_two_strain_cross_immunity)
+
+find_identifiable_functions(sirv_two_strain_cross_immunity)

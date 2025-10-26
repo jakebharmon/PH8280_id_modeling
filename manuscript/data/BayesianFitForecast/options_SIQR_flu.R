@@ -1,8 +1,8 @@
 # ----------------------------
 # Calibration / forecasting metadata
 # ----------------------------
-calibrationperiods <- c(17)
-forecastinghorizon <- 10
+calibrationperiods <- c(20)
+forecastinghorizon <- 30
 
 model_name <- "SIRV_two_strain"
 cadfilename1 <- "influenza_df"
@@ -31,12 +31,13 @@ vars <- c("S","I1","I2","R1","R2","V")
 # "rho"      # params10  reporting fraction
 params <- c("Lambda","beta1","beta2",
             "mu","gamma1","gamma2",
-            "nu","N","i0","rho")
+            "nu","N","i0","rho",
+            "sigma12","sigma21")
 
-# If you use a boolean vector for fixing parameters, ensure indices match above.
 paramsfix <- c(1,0,0,
                1,0,0,
-               0,1,1,0)
+               0,1,1,0,
+               0,0)
 
 # ----------------------------
 # Priors and initial conditions 
@@ -87,6 +88,15 @@ params10_prior <- "beta(2, 4)"
 params10_LB <- 0
 params10_UB <- 1
 
+# 11-12: sigma (cross immunity)
+params11_prior <- "normal(0.95, 0.05)T[0,]"  # sigma12: partial immunity from strain 1 → strain 2
+params11_LB <- 0
+params11_UB <- 1
+params12_prior <- "normal(0.95, 0.05)T[0,]"  # sigma21: partial immunity from strain 2 → strain 1
+params12_LB <- 0
+params12_UB <- 1
+
+
 # ----------------------------
 # Observation / error model priors
 # ----------------------------
@@ -106,15 +116,16 @@ time_dependent_templates <- list()
 # ----------------------------
 ode_system <- '
   diff_var1 = params1 - (params2 * vars1 * vars2 / params8) - (params3 * vars1 * vars3 / params8) - params7 * vars1 - params4 * vars1
-  diff_var2 = (params2 * vars1 * vars2 / params8) - (params4 + params5) * vars2
-  diff_var3 = (params3 * vars1 * vars3 / params8) - (params4 + params6) * vars3
-  diff_var4 = params5 * vars2 - params4 * vars4
-  diff_var5 = params6 * vars3 - params4 * vars5
+  diff_var2 = (params2 * vars1 * vars2 / params8) + ((1 - params12) * params2 * vars5 * vars2 / params8) - (params4 + params5) * vars2
+  diff_var3 = (params3 * vars1 * vars3 / params8) + ((1 - params11) * params3 * vars4 * vars3 / params8) - (params4 + params6) * vars3
+  diff_var4 = params5 * vars2 - (1 - params11) * (params3 * vars4 * vars3 / params8) - params4 * vars4
+  diff_var5 = params6 * vars3 - (1 - params12) * (params2 * vars5 * vars2 / params8) - params4 * vars5
   diff_var6 = params7 * vars1 - params4 * vars6
   y1 = params10 * vars2 
   y2 = params10 * vars3
   y3 = vars6
 '
+
 
 # ----------------------------
 # Composite expressions of interest

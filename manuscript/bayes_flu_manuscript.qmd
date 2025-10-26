@@ -43,14 +43,26 @@ The system of Ordinary Differential Equations (ODEs) used for the identifiabilit
 
 $$
 \begin{aligned}
-\frac{dS}{dt} &= \Lambda - \frac{\beta_1 S I_1}{N_0} - \frac{\beta_2 S I_2}{N_0} - \alpha S - \mu S \\
-\frac{dI_1}{dt} &= \frac{\beta_1 S I_1}{N_0} - (\mu + \gamma_1) I_1 \\
-\frac{dI_2}{dt} &= \frac{\beta_2 S I_2}{N_0} - (\mu + \gamma_2) I_2 \\
-\frac{dR_1}{dt} &= \gamma_1 I_1 - \mu R_1 \\
-\frac{dR_2}{dt} &= \gamma_2 I_2 - \mu R_2 \\
-\frac{dV}{dt} &= \alpha S - \mu V
+\frac{dS}{dt} &= \Lambda 
+- \frac{\beta_1 S I_1}{N_0} 
+- \frac{\beta_2 S I_2}{N_0} 
+- \alpha S 
+- \mu S, \\[6pt]
+\frac{dI_1}{dt} &= 
+\frac{\beta_1 (S + \sigma_{21} R_2) I_1}{N_0}
+- (\mu + \gamma_1) I_1, \\[6pt]
+\frac{dI_2}{dt} &= 
+\frac{\beta_2 (S + \sigma_{12} R_1) I_2}{N_0}
+- (\mu + \gamma_2) I_2, \\[6pt]
+\frac{dR_1}{dt} &= 
+\gamma_1 I_1 - \mu R_1, \\[6pt]
+\frac{dR_2}{dt} &= 
+\gamma_2 I_2 - \mu R_2, \\[6pt]
+\frac{dV}{dt} &= 
+\alpha S - \mu V.
 \end{aligned}
 $$
+
 
 **Julia Structural Identifiability**
 

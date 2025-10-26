@@ -12,6 +12,8 @@ functions {
     real gamma2 = theta[4];
     real nu = theta[5];
     real rho = theta[6];
+    real sigma12 = theta[7];
+    real sigma21 = theta[8];
     real Lambda = x_i[1];
     real N = x_i[2];
     real i0 = x_i[3];
@@ -24,10 +26,10 @@ functions {
     real V = y[6];
 
     real dS_dt = Lambda - (beta1 * S * I1 / N) - (beta2 * S * I2 / N) - nu * S - mu * S;
-    real dI1_dt = (beta1 * S * I1 / N) - (mu + gamma1) * I1;
-    real dI2_dt = (beta2 * S * I2 / N) - (mu + gamma2) * I2;
-    real dR1_dt = gamma1 * I1 - mu * R1;
-    real dR2_dt = gamma2 * I2 - mu * R2;
+    real dI1_dt = (beta1 * S * I1 / N) + ((1 - sigma21) * beta1 * R2 * I1 / N) - (mu + gamma1) * I1;
+    real dI2_dt = (beta2 * S * I2 / N) + ((1 - sigma12) * beta2 * R1 * I2 / N) - (mu + gamma2) * I2;
+    real dR1_dt = gamma1 * I1 - (1 - sigma12) * (beta2 * R1 * I2 / N) - mu * R1;
+    real dR2_dt = gamma2 * I2 - (1 - sigma21) * (beta1 * R2 * I1 / N) - mu * R2;
     real dV_dt = nu * S - mu * V;
     real y1 = rho * I1;
     real y2 = rho * I2;
@@ -61,6 +63,8 @@ transformed data {
     real<lower=0, upper=1> gamma2;
     real<lower=0, upper=0.01> nu;
     real<lower=0, upper=1> rho;
+    real<lower=0, upper=1> sigma12;
+    real<lower=0, upper=1> sigma21;
     real<lower=0> phi_inv1;
     real<lower=0> phi_inv2;
 }
@@ -68,13 +72,15 @@ transformed parameters {
   array[n_days + nfst_days, 6] real y;
   real phi1 = 1.0 / phi_inv1;
   real phi2 = 1.0 / phi_inv2;
-  array[6] real theta;
+  array[8] real theta;
   theta[1] = beta1;
   theta[2] = beta2;
   theta[3] = gamma1;
   theta[4] = gamma2;
   theta[5] = nu;
   theta[6] = rho;
+  theta[7] = sigma12;
+  theta[8] = sigma21;
 
   y = integrate_ode_rk45(ode, y0, t0, ts, theta, x_r, x_i);
 }
@@ -85,13 +91,15 @@ model {
   gamma2 ~ normal(0.25, 0.05)T[0,];
   nu ~ normal(0.0019, 0.0006)T[0,];
   rho ~ beta(2, 4);
+  sigma12 ~ normal(0.95, 0.05)T[0,];
+  sigma21 ~ normal(0.95, 0.05)T[0,];
 
   phi_inv1 ~ exponential(5);
   phi_inv2 ~ exponential(5);
 
   for (t in 1:n_days) {
-    cases1[t] ~ neg_binomial_2(fmax(1e-6, (beta1 * y[t,1] * y[t,2] / N) - (mu + gamma1) * y[t,2]), phi1);
-    cases2[t] ~ neg_binomial_2(fmax(1e-6, (beta2 * y[t,1] * y[t,3] / N) - (mu + gamma2) * y[t,3]), phi2);
+    cases1[t] ~ neg_binomial_2(fmax(1e-6, (beta1 * y[t,1] * y[t,2] / N) + ((1 - sigma21) * beta1 * y[t,5] * y[t,2] / N) - (mu + gamma1) * y[t,2]), phi1);
+    cases2[t] ~ neg_binomial_2(fmax(1e-6, (beta2 * y[t,1] * y[t,3] / N) + ((1 - sigma12) * beta2 * y[t,4] * y[t,3] / N) - (mu + gamma2) * y[t,3]), phi2);
   }
 }
 
@@ -99,8 +107,8 @@ generated quantities {
 array[n_days + nfst_days] real pred_cases1;
 array[n_days + nfst_days] real pred_cases2;
   for (t in 1:(n_days + nfst_days)) {
-    pred_cases1[t] = neg_binomial_2_rng(fmax(1e-6, (beta1 * y[t,1] * y[t,2] / N) - (mu + gamma1) * y[t,2]), phi1);
-    pred_cases2[t] = neg_binomial_2_rng(fmax(1e-6, (beta2 * y[t,1] * y[t,3] / N) - (mu + gamma2) * y[t,3]), phi2);
+    pred_cases1[t] = neg_binomial_2_rng(fmax(1e-6, (beta1 * y[t,1] * y[t,2] / N) + ((1 - sigma21) * beta1 * y[t,5] * y[t,2] / N) - (mu + gamma1) * y[t,2]), phi1);
+    pred_cases2[t] = neg_binomial_2_rng(fmax(1e-6, (beta2 * y[t,1] * y[t,3] / N) + ((1 - sigma12) * beta2 * y[t,4] * y[t,3] / N) - (mu + gamma2) * y[t,3]), phi2);
   }
 
   real R0_1 = beta1 / gamma1;
