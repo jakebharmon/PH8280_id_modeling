@@ -1,8 +1,8 @@
 # ----------------------------
 # Calibration / forecasting metadata
 # ----------------------------
-calibrationperiods <- c(20)
-forecastinghorizon <- 30
+calibrationperiods <- c(40)
+forecastinghorizon <- 15
 
 model_name <- "SIRV_two_strain"
 cadfilename1 <- "influenza_df"
@@ -29,6 +29,8 @@ vars <- c("S","I1","I2","R1","R2","V")
 # "N"        # params8   population
 # "i0"       # params9   initial infected
 # "rho"      # params10  reporting fraction
+# "sigma12"  # params11  Crossimmunity to 2 given 1
+# "sigma21"  # params12  Crossimmunity to 1 given 2
 params <- c("Lambda","beta1","beta2",
             "mu","gamma1","gamma2",
             "nu","N","i0","rho",
@@ -50,34 +52,35 @@ params1_prior  <- 0
 
 # 2–3: beta1, beta2 (transmission rates)
 # lognormal priors centered on plausible beta = R0 * gamma (~0.3-0.5)
-params2_prior  <- "normal(0.4, 0.5)T[0,]"
+params2_prior <- "normal(3.5, 0.7)T[0,]"
 params2_LB <- 0
-params2_UB <- 2.0
-params3_prior  <- "normal(0.4, 0.5)T[0,]"
+params2_UB <- 10
+params3_prior <- "normal(3.5, 0.7)T[0,]"
 params3_LB <- 0
-params3_UB <- 2.0
+params3_UB <- 10
 
 # 4: mu (natural death rate)
-# Human life expectancy ~70 years -> ~3.9e-5 per day
-params4_prior  <- 3.9e-5
+# Human life expectancy ~70 years 
+params4_prior <- 2.7e-4
 
 # 5–6: gamma1, gamma2 (recovery rates)
 # Infectious period 3–5 days
-params5_prior  <- "normal(0.25, 0.05)T[0,]"
+params5_prior <- "normal(1.2, 0.2)T[0,]"
 params5_LB <- 0
-params5_UB <- 1.0
-params6_prior  <- "normal(0.25, 0.05)T[0,]"
+params5_UB <- 5
+params6_prior <- "normal(1.2, 0.2)T[0,]"
 params6_LB <- 0
-params6_UB <- 1.0
+params6_UB <- 5
 
 # 7: nu (vaccination rate)
-# annual coverage c ≈ 0.4-0.6 => nu ≈ -ln(1-c)/365 ~ 0.0014-0.0025
-params7_prior <- "normal(0.0019, 0.0006)T[0,]" 
+# annual coverage c ≈ 40% or 60%
+params7_prior <- 0
+#params7_prior <- "normal(0.010, 0.002)T[0,]"
 params7_LB <- 0
-params7_UB <- 0.01
+params7_UB <- 0.05
 
 # 8: N (population)
-params8_prior <- 1e6
+params8_prior <- 1e5
 
 # 9: i0 (initial infected)
 params9_prior <- 10
@@ -145,7 +148,7 @@ fitting_diff <- c(1,1)
 # Initial conditions 
 # S (vars1), I1 (vars2), I2 (vars3), R1 (vars4), R2 (vars5), V (vars6)
 # ----------------------------
-Ic <- c(1e6, 10, 0, 0, 0, 0)
+Ic <- c((10000 - 200), 1000, 1000, 0, 0, 0)
 vars.init <- 1
 
 # ----------------------------

@@ -7,7 +7,7 @@ library(tidyr)
 n_prior_samples <- 200
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 dir.create("output", showWarnings = FALSE)
-source("options_SIQR_flu.R")
+source("options_SIRV_scenario_4.R")
 folder_name <- file.path("output", paste("prior-solution", model_name, sep = "-"))
 dir.create(folder_name, showWarnings = FALSE)
 state_names <- vars
