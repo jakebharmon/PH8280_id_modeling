@@ -1,8 +1,8 @@
 # ----------------------------
 # Calibration / forecasting metadata
 # ----------------------------
-calibrationperiods <- c(40)
-forecastinghorizon <- 15
+calibrationperiods <- c(17)
+forecastinghorizon <- 10
 
 model_name <- "SIRV_two_strain"
 cadfilename1 <- "influenza_df"

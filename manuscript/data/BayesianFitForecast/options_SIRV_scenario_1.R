@@ -1,14 +1,10 @@
-# Scenario 1 – Single-strain invasion
-#This baseline simulation represents the case where only one strain has 
-#sufficient transmissibility to invade the population.
-
 # ----------------------------
 # Calibration / forecasting metadata
 # ----------------------------
-calibrationperiods <- c(40)
-forecastinghorizon <- 15
+calibrationperiods <- c(17)
+forecastinghorizon <- 10
 
-model_name <- "scenario_1_single_strain"
+model_name <- "scenario_one_half_vaccination"
 cadfilename1 <- "influenza_df"
 caddisease <- "Influenza"
 datatype <- c("Influenza A","Influenza B")
@@ -42,8 +38,8 @@ params <- c("Lambda","beta1","beta2",
 
 paramsfix <- c(1,0,0,
                1,0,0,
-               0,1,1,0,
-               0,0)
+               1,1,1,0,
+               1,1)
 
 # ----------------------------
 # Priors and initial conditions 
@@ -55,11 +51,10 @@ paramsfix <- c(1,0,0,
 params1_prior  <- 0 
 
 # 2–3: beta1, beta2 (transmission rates)
-# lognormal priors centered on plausible beta = R0 * gamma (~0.3-0.5)
-params2_prior <- "normal(3.5, 0.7)T[0,]"
+params2_prior <- "normal(2, 0.2)T[0,]"
 params2_LB <- 0
 params2_UB <- 10
-params3_prior <- "normal(1, 0.7)T[0,]"
+params3_prior <- "normal(1.8, 0.2)T[0,]"
 params3_LB <- 0
 params3_UB <- 10
 
@@ -69,25 +64,25 @@ params4_prior <- 2.7e-4
 
 # 5–6: gamma1, gamma2 (recovery rates)
 # Infectious period 3–5 days
-params5_prior <- "normal(1.2, 0.2)T[0,]"
+params5_prior <- "normal(1.5, 0.2)T[0,]"
 params5_LB <- 0
 params5_UB <- 5
-params6_prior <- "normal(1.2, 0.2)T[0,]"
+params6_prior <- "normal(1.5, 0.2)T[0,]"
 params6_LB <- 0
 params6_UB <- 5
 
 # 7: nu (vaccination rate)
 # annual coverage c ≈ 40% or 60%
-params7_prior <- 0
-#params7_prior <- "normal(0.010, 0.002)T[0,]"
-params7_LB <- 0
-params7_UB <- 0.05
+# 40 %	0.010
+# 50 %	0.013
+# 60 %	0.019
+params7_prior <- 0.013
 
 # 8: N (population)
 params8_prior <- 1e5
 
 # 9: i0 (initial infected)
-params9_prior <- 10
+params9_prior <- 15
 
 # 10: rho (reporting fraction)
 # mean ~ 0.333;underreporting
@@ -96,12 +91,8 @@ params10_LB <- 0
 params10_UB <- 1
 
 # 11-12: sigma (cross immunity)
-params11_prior <- "normal(0.95, 0.05)T[0,]"  # sigma12: partial immunity from strain 1 → strain 2
-params11_LB <- 0
-params11_UB <- 1
-params12_prior <- "normal(0.95, 0.05)T[0,]"  # sigma21: partial immunity from strain 2 → strain 1
-params12_LB <- 0
-params12_UB <- 1
+params11_prior <- .95
+params12_prior <- .95
 
 
 # ----------------------------
@@ -152,7 +143,7 @@ fitting_diff <- c(1,1)
 # Initial conditions 
 # S (vars1), I1 (vars2), I2 (vars3), R1 (vars4), R2 (vars5), V (vars6)
 # ----------------------------
-Ic <- c((1e5 - 2000), 1000, 1000, 0, 0, 0)
+Ic <- c(1e5 - 15, 12, 3, 0, 0, 0)
 vars.init <- 1
 
 # ----------------------------

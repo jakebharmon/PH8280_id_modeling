@@ -10,14 +10,14 @@ functions {
     real beta2 = theta[2];
     real gamma1 = theta[3];
     real gamma2 = theta[4];
-    real nu = theta[5];
-    real rho = theta[6];
-    real sigma12 = theta[7];
-    real sigma21 = theta[8];
+    real rho = theta[5];
     real Lambda = x_i[1];
     real N = x_i[2];
     real i0 = x_i[3];
     real mu = x_r[1];
+    real nu = x_r[2];
+    real sigma12 = x_r[3];
+    real sigma21 = x_r[4];
     real S = y[1];
     real I1 = y[2];
     real I2 = y[3];
@@ -50,21 +50,21 @@ array[n_days] int cases2;
     int N;
     int i0;
     real mu;
+    real nu;
+    real sigma12;
+    real sigma21;
 }
   
 transformed data {
-    array[1] real x_r = {mu};
+    array[4] real x_r = {mu,nu,sigma12,sigma21};
     array[3] int x_i = {Lambda,N,i0};
 
   }parameters {
-    real<lower=0, upper=2> beta1;
-    real<lower=0, upper=2> beta2;
-    real<lower=0, upper=1> gamma1;
-    real<lower=0, upper=1> gamma2;
-    real<lower=0, upper=0.01> nu;
+    real<lower=0, upper=10> beta1;
+    real<lower=0, upper=10> beta2;
+    real<lower=0, upper=5> gamma1;
+    real<lower=0, upper=5> gamma2;
     real<lower=0, upper=1> rho;
-    real<lower=0, upper=1> sigma12;
-    real<lower=0, upper=1> sigma21;
     real<lower=0> phi_inv1;
     real<lower=0> phi_inv2;
 }
@@ -72,27 +72,21 @@ transformed parameters {
   array[n_days + nfst_days, 6] real y;
   real phi1 = 1.0 / phi_inv1;
   real phi2 = 1.0 / phi_inv2;
-  array[8] real theta;
+  array[5] real theta;
   theta[1] = beta1;
   theta[2] = beta2;
   theta[3] = gamma1;
   theta[4] = gamma2;
-  theta[5] = nu;
-  theta[6] = rho;
-  theta[7] = sigma12;
-  theta[8] = sigma21;
+  theta[5] = rho;
 
   y = integrate_ode_rk45(ode, y0, t0, ts, theta, x_r, x_i);
 }
 model {
-  beta1 ~ normal(0.4, 0.5)T[0,];
-  beta2 ~ normal(0.4, 0.5)T[0,];
-  gamma1 ~ normal(0.25, 0.05)T[0,];
-  gamma2 ~ normal(0.25, 0.05)T[0,];
-  nu ~ normal(0.0019, 0.0006)T[0,];
+  beta1 ~ normal(2, 0.2)T[0,];
+  beta2 ~ normal(1.8, 0.2)T[0,];
+  gamma1 ~ normal(1.5, 0.2)T[0,];
+  gamma2 ~ normal(1.5, 0.2)T[0,];
   rho ~ beta(2, 4);
-  sigma12 ~ normal(0.95, 0.05)T[0,];
-  sigma21 ~ normal(0.95, 0.05)T[0,];
 
   phi_inv1 ~ exponential(5);
   phi_inv2 ~ exponential(5);

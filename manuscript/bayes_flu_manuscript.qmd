@@ -39,7 +39,7 @@ format: html
 
 ## Model Equations
 
-The system of Ordinary Differential Equations (ODEs) used for the identifiability analysis is defined as:
+The two-strain SIRV model extends the susceptible-infectious-recovered framework to include simultaneous circulation of Influenza A and B. Each strain has its own infection and recovery flow, and the model introduces cross-immunity terms that reduce the susceptibility of individuals recovered from one strain to the other. A vaccination compartment allows a fraction of susceptibles to become removed at a rate that can vary by scenario. 
 
 $$
 \begin{aligned}
@@ -65,6 +65,8 @@ $$
 
 
 **Julia Structural Identifiability**
+
+Before estimating parameters or interpreting model outputs, it is necessary to determine whether the parameters can, in principle, be uniquely identified from the available data. The structural identifiability analysis conducted in Julia tests (CITE CHOWELL JULIA) which parameters can be recovered given perfect observations of the system. Parameters that are globally identifiable can be estimated reliably, while non-identifiable parameters may need to be fixed or constrained by prior information. The resulting table summarizes the identifiability status of all model components, providing confidence that the quantities of interest—particularly transmission and recovery rates—can be meaningfully interpreted when fitted to surveillance data.
 
 ```{r}
 #| label: identifiability-table
@@ -99,6 +101,8 @@ knitr::kable(
 
 ## Model Parameters
 
+Parameter definitions and prior distributions are grounded in existing epidemiological literature and demographic data. Transmission rates are assigned lognormal priors centered around values consistent with reproduction numbers reported for typical influenza seasons. Recovery rates correspond to infectious periods of approximately three to five days. The natural mortality rate is fixed to reflect standard demographic turnover, while vaccination rates are set to match observed U.S. coverage levels of roughly forty to sixty percent per year. The reporting fraction accounts for under-ascertainment of clinical cases in surveillance data. Together, these parameters establish biologically realistic starting conditions for simulation and inference.
+
 ```{r}
 # Define the Parameter Mapping Data Frame
 param_map_df <- tribble(
@@ -132,14 +136,107 @@ R_{0,2} &= \frac{\beta_2}{\gamma_2 + \delta_2 + \mu}, \\
 \end{aligned}
 $$
 
-## Parameters: 2024 Flu Season
+## Baseline Scenario
+
+
+**Parameters**
 
 ```{r}
-output_name <- "SIRV_two_strain-Influenza-negativebinomial-cal-17-fcst-10"
+output_name <- "scenario_one_half_vaccination-Influenza-negativebinomial-cal-17-fcst-10"
 
 parameters <- readxl::read_excel(paste0("/Users/jake/Documents/PH8280_id_modeling/manuscript/data/BayesianFitForecast/output/", output_name, "/parameters-", output_name, ".xlsx"))
 
 flextable::flextable(parameters)
 ```
+
+**Performance Metrics - Influenza A**
+
+```{r}
+perf <- readxl::read_excel("/Users/jake/Documents/PH8280_id_modeling/manuscript/data/BayesianFitForecast/output/scenario_one_half_vaccination-Influenza-negativebinomial-cal-17-fcst-10/performance metrics-scenario_one_half_vaccination-Influenza-negativebinomial-Influenza A-cal-17-fcst-10.xlsx")
+
+flextable::flextable(perf)
+```
+
+**Performance Metrics - Influenza B**
+
+```{r}
+perf <- readxl::read_excel("/Users/jake/Documents/PH8280_id_modeling/manuscript/data/BayesianFitForecast/output/scenario_one_half_vaccination-Influenza-negativebinomial-cal-17-fcst-10/performance metrics-scenario_one_half_vaccination-Influenza-negativebinomial-Influenza B-cal-17-fcst-10.xlsx")
+
+flextable::flextable(perf)
+```
+## Varying Vaccination scenarios
+
+Four vaccination scenarios were generated to examine how coverage levels influence epidemic outcomes: no vaccination, low vaccination, moderate (half) vaccination, and high vaccination. For each scenario, the model was run using priors to generate distributions of trajectories for the two strains. From these simulations, the median and ninety-five percent credible intervals were computed for the number of infectious individuals over time. The resulting files summarize uncertainty in the epidemic trajectories and provide the basis for comparing the magnitude and timing of epidemic peaks across scenarios. Differences between Influenza A and B peaks indicate how varying levels of immune protection and vaccination shift epidemic dynamics.
+
+```{r}
+library(tidyverse)
+
+#  Define your scenario folders
+base_dir <- "/Users/jake/Documents/PH8280_id_modeling/manuscript/data/BayesianFitForecast/output"
+
+scenario_dirs <- list.dirs(base_dir, recursive = FALSE, full.names = TRUE) %>%
+keep(~ grepl("prior-solution-scenario_", basename(.x))) %>%
+keep(~ any(grepl("I1_95CI", list.files(.x))) & any(grepl("I2_95CI", list.files(.x))))
+cat("Found scenario folders:\n")
+print(scenario_dirs)
+
+# Function to extract peaks from I1/I2 CSVs in a folder
+extract_peaks <- function(folder) {
+  scenario_name <- basename(folder)
+  
+  # Read both files (wide format with time, median, q025, q975)
+  i1 <- read_csv(file.path(folder, "I1_95CI.csv"))
+  i2 <- read_csv(file.path(folder, "I2_95CI.csv"))
+  
+  # Calculate peak (max median) and time of that peak
+  i1_peak_row <- i1 %>% slice_max(q975, n = 1, with_ties = FALSE)
+  i2_peak_row <- i2 %>% slice_max(q975, n = 1, with_ties = FALSE)
+  
+  tibble(
+    Scenario = scenario_name,
+    I1_peak_value = i1_peak_row$q975,
+    I1_peak_time = i1_peak_row$time,
+    I2_peak_value = i2_peak_row$q975,
+    I2_peak_time = i2_peak_row$time
+  )
+}
+
+# Apply to all scenario folders
+peak_summary <- map_dfr(scenario_dirs, extract_peaks)
+
+# View and save
+flextable::flextable(peak_summary) %>% flextable::autofit()
+```
+
+```{r}
+#| label: plot-peak-values
+#| fig-width: 7
+#| fig-height: 4
+#| echo: false
+
+peak_summary_long <- peak_summary %>%
+select(Scenario, I1_peak_value, I2_peak_value) %>%
+pivot_longer(cols = starts_with("I"),
+names_to = "Strain",
+values_to = "PeakValue") %>%
+mutate(Strain = recode(Strain,
+I1_peak_value = "Strain I1 (A)",
+I2_peak_value = "Strain I2 (B)"))
+
+ggplot(peak_summary_long,
+aes(x = reorder(Scenario, PeakValue), y = PeakValue, fill = Strain)) +
+geom_col(position = "dodge") +
+coord_flip() +
+scale_fill_brewer(palette = "Set2") +
+labs(title = "Peak Infection Magnitude Across Scenarios",
+x = "Scenario",
+y = "Peak 95% CI infections") +
+theme_minimal(base_size = 13)
+
+```
+
+## Discussion
+
+The scenario analysis illustrates the potential for vaccination and immune interference to modulate multi-strain influenza dynamics. Under low or absent vaccination, both strains can circulate concurrently, but increasing vaccine coverage reduces the amplitude of the first strain and delays or suppresses the second. This aligns with empirical observations of diminished Influenza B activity during seasons with strong vaccination uptake and cross-protective immunity. While the model simplifies several biological processes, it captures key features of influenza’s alternating dominance and highlights the importance of sustained vaccination coverage in preventing overlapping epidemics. Future work could extend this framework by incorporating waning immunity, age structure, and strain-specific vaccine efficacy to better reflect real-world heterogeneity.
 
 ## Citations

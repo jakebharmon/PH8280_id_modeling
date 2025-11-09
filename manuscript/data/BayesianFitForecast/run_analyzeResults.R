@@ -11,7 +11,7 @@ library(ggplot2)
 library(stringr)
 library(gridExtra)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-source("options_SIQR_flu.R")
+source("options_SIRV_scenario_1.R")
 source("Metric functions.R")
 Mydata <- read_excel(paste0(cadfilename1, ".xlsx"))
 

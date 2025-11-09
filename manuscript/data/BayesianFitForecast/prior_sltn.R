@@ -473,3 +473,23 @@ if (exists("sim_result") && length(all_trajectories) > 0) {
 }
 
 cat("\n=== ANALYSIS COMPLETE ===\n")
+
+library(dplyr)
+
+# Filter each variable and save separately
+i1_data <- all_states_data %>%
+  filter(variable == "I1")
+
+i2_data <- all_states_data %>%
+  filter(variable == "I2")
+
+# Define file names
+i1_csv <- file.path(folder_name, "I1_95CI.csv")
+i2_csv <- file.path(folder_name, "I2_95CI.csv")
+
+# Save each to its own CSV
+write.csv(i1_data, i1_csv, row.names = FALSE)
+write.csv(i2_data, i2_csv, row.names = FALSE)
+
+cat("Saved I1 95% CI dataset to:", i1_csv, "\n")
+cat("Saved I2 95% CI dataset to:", i2_csv, "\n")

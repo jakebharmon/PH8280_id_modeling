@@ -1,16 +1,10 @@
-#Scenario 2 – Symmetric competition
-#Because the model is symmetric, the two strains follow identical epidemic 
-#trajectories and reach their peaks simultaneously. This scenario confirms 
-#that the code treats both strains consistently, conserves total population, 
-#and produces numerically identical outcomes when parameterized symmetrically.
-
 # ----------------------------
 # Calibration / forecasting metadata
 # ----------------------------
-calibrationperiods <- c(40)
+calibrationperiods <- c(20)
 forecastinghorizon <- 15
 
-model_name <- "scenario_2_symmetric_competition"
+model_name <- "scenario_one_no_vaccination"
 cadfilename1 <- "influenza_df"
 caddisease <- "Influenza"
 datatype <- c("Influenza A","Influenza B")
@@ -44,7 +38,7 @@ params <- c("Lambda","beta1","beta2",
 
 paramsfix <- c(1,0,0,
                1,0,0,
-               0,1,1,0,
+               1,1,1,0,
                0,0)
 
 # ----------------------------
@@ -57,11 +51,10 @@ paramsfix <- c(1,0,0,
 params1_prior  <- 0 
 
 # 2–3: beta1, beta2 (transmission rates)
-# lognormal priors centered on plausible beta = R0 * gamma (~0.3-0.5)
-params2_prior <- "normal(3.5, 0.7)T[0,]"
+params2_prior <- "normal(2, 0.2)T[0,]"
 params2_LB <- 0
 params2_UB <- 10
-params3_prior <- "normal(3.5, 0.7)T[0,]"
+params3_prior <- "normal(1.8, 0.2)T[0,]"
 params3_LB <- 0
 params3_UB <- 10
 
@@ -71,19 +64,19 @@ params4_prior <- 2.7e-4
 
 # 5–6: gamma1, gamma2 (recovery rates)
 # Infectious period 3–5 days
-params5_prior <- "normal(1.2, 0.2)T[0,]"
+params5_prior <- "normal(1.5, 0.2)T[0,]"
 params5_LB <- 0
 params5_UB <- 5
-params6_prior <- "normal(1.2, 0.2)T[0,]"
+params6_prior <- "normal(1.5, 0.2)T[0,]"
 params6_LB <- 0
 params6_UB <- 5
 
 # 7: nu (vaccination rate)
 # annual coverage c ≈ 40% or 60%
+# 40 %	0.010
+# 50 %	0.013
+# 60 %	0.019
 params7_prior <- 0
-#params7_prior <- "normal(0.010, 0.002)T[0,]"
-params7_LB <- 0
-params7_UB <- 0.05
 
 # 8: N (population)
 params8_prior <- 1e5
@@ -154,7 +147,7 @@ fitting_diff <- c(1,1)
 # Initial conditions 
 # S (vars1), I1 (vars2), I2 (vars3), R1 (vars4), R2 (vars5), V (vars6)
 # ----------------------------
-Ic <- c((1e5 - 2000), 1000, 1000, 0, 0, 0)
+Ic <- c(1e5 - 15, 12, 3, 0, 0, 0)
 vars.init <- 1
 
 # ----------------------------
